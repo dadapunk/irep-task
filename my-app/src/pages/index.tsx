@@ -1,16 +1,17 @@
-import * as React from 'react';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import { useState } from 'react';
-import { Button } from '@mui/material';
+import React, { useState } from 'react';
+import PersonForm from '../components/PersonForm';
+import PersonTable from '../components/PersonTable';
 
-
-type Employee = {
+/**
+ * @typedef Person
+ * @property {number} id
+ * @property {string} name
+ * @property {string} lastName
+ * @property {string} jobTitle
+ * @property {string} birthDate
+ * @property {boolean} active
+ */
+type Person = {
   id: number;
   name: string;
   lastName: string;
@@ -19,7 +20,7 @@ type Employee = {
   active: boolean;
 };
 
-const initialRows: Employee[] = [
+const initialRows: Person[] = [
   { "id":1, "name":"Jorge", "lastName":"Ramirez", "jobTitle":"Backend Developer", "birthDate":"22/11/1982", "active":true },
   { "id":2, "name":"Sebastián", "lastName":"Velásquez", "jobTitle":"Systems Admin & Developer", "birthDate":"07/08/1986", "active":true },
   { "id":3, "name":"Alberto", "lastName":"Recio", "jobTitle":"Frontend Developer", "birthDate":"02/28/1983", "active":true },
@@ -27,45 +28,54 @@ const initialRows: Employee[] = [
   { "id":5, "name":"Christian", "lastName":"Feldermann", "jobTitle":"Head of Technology", "birthDate":"01/01/1974", "active":true }
 ];
 
-export default function BasicTable() {
-  const [rows, setRows] = useState<Employee[]>(initialRows);
+/**
+ * @function App
+ * @returns {JSX.Element}
+ */
+function App() {
+  const [persons, setPersons] = useState<Person[]>(initialRows);
+  const [formValues, setFormValues] = useState<Person>({ id: '', name: '', lastName: '', jobTitle: '', birthDate: '', active: false });
 
-  const toggleActive = (id: number) => {
-    setRows(rows.map(row => row.id === id ? { ...row, active: !row.active } : row));
+  /**
+   * @function handleInputChange
+   * @param {React.ChangeEvent<HTMLInputElement>} event
+   */
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFormValues({ ...formValues, [event.target.name]: event.target.value });
   };
 
+  /**
+   * @function handleSubmit
+   * @param {React.FormEvent<HTMLFormElement>} event
+   */
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const highestId = Math.max(...persons.map(person => parseInt(person.id)), 0);
+    const newPerson = { ...formValues, id: (highestId + 1).toString() };
+    setPersons([...persons, newPerson]);
+    setFormValues({ id: '', name: '', lastName: '', jobTitle: '', birthDate: '', active: false });
+  };
+
+  /**
+   * @function handleDelete
+   * @param {string} id
+   */
+  const handleDelete = (id: string) => {
+    setPersons(persons.filter(person => person.id !== id));
+  };
+  /**
+ * @function handleToggleActive
+ * @param {string} id
+ */
+const handleToggleActive = (id: string) => {
+  setPersons(persons.map(person => person.id === id ? { ...person, active: !person.active } : person));
+};
+
   return (
-    <TableContainer component={Paper}>
-      <Table sx={{ minWidth: 650 }} aria-label="simple table">
-        <TableHead>
-          <TableRow>
-            <TableCell>ID</TableCell>
-            <TableCell>Name</TableCell>
-            <TableCell>Last Name</TableCell>
-            <TableCell>Job Title</TableCell>
-            <TableCell>Birth Date</TableCell>
-            <TableCell>Active</TableCell>
-            <TableCell>Action</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.id}>
-              <TableCell>{row.id}</TableCell>
-              <TableCell>{row.name}</TableCell>
-              <TableCell>{row.lastName}</TableCell>
-              <TableCell>{row.jobTitle}</TableCell>
-              <TableCell>{row.birthDate}</TableCell>
-              <TableCell>{row.active ? 'Yes' : 'No'}</TableCell>
-              <TableCell>
-                <Button variant="contained" color={row.active ? "secondary" : "primary"} onClick={() => toggleActive(row.id)}>
-                  {row.active ? 'Deactivate' : 'Activate'}
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <div>
+      <PersonForm formValues={formValues} handleInputChange={handleInputChange} handleSubmit={handleSubmit} />
+      <PersonTable persons={persons} handleDelete={handleDelete} handleToggleActive={handleToggleActive} />    </div>
   );
 }
+
+export default App;
