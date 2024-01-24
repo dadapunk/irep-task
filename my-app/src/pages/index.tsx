@@ -1,25 +1,12 @@
 import React, { useState } from 'react';
 import PersonForm from '../components/PersonForm';
 import PersonTable from '../components/PersonTable';
+import { Person } from '../types';
 
 /**
- * @typedef Person
- * @property {number} id
- * @property {string} name
- * @property {string} lastName
- * @property {string} jobTitle
- * @property {string} birthDate
- * @property {boolean} active
+ * Initial data for the persons array
+ * @type {Person[]}
  */
-type Person = {
-  id: number;
-  name: string;
-  lastName: string;
-  jobTitle: string;
-  birthDate: string;
-  active: boolean;
-};
-
 const initialRows: Person[] = [
   { "id":1, "name":"Jorge", "lastName":"Ramirez", "jobTitle":"Backend Developer", "birthDate":"22/11/1982", "active":true },
   { "id":2, "name":"Sebastián", "lastName":"Velásquez", "jobTitle":"Systems Admin & Developer", "birthDate":"07/08/1986", "active":true },
@@ -29,53 +16,44 @@ const initialRows: Person[] = [
 ];
 
 /**
- * @function App
- * @returns {JSX.Element}
+ * Main application component
+ * @returns {React.FC} Functional component
  */
-function App() {
+const App: React.FC = () => {
+    /**
+   * State for the persons array
+   * @type {React.Dispatch<React.SetStateAction<Person[]>>}
+   */
   const [persons, setPersons] = useState<Person[]>(initialRows);
-  const [formValues, setFormValues] = useState<Person>({ id: '', name: '', lastName: '', jobTitle: '', birthDate: '', active: false });
-
-  /**
-   * @function handleInputChange
-   * @param {React.ChangeEvent<HTMLInputElement>} event
+    /**
+   * State for the currently selected person
+   * @type {React.Dispatch<React.SetStateAction<Person | null>>}
    */
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormValues({ ...formValues, [event.target.name]: event.target.value });
-  };
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
-  /**
-   * @function handleSubmit
-   * @param {React.FormEvent<HTMLFormElement>} event
-   */
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const highestId = Math.max(...persons.map(person => parseInt(person.id)), 0);
-    const newPerson = { ...formValues, id: (highestId + 1).toString() };
-    setPersons([...persons, newPerson]);
-    setFormValues({ id: '', name: '', lastName: '', jobTitle: '', birthDate: '', active: false });
+  const handleDelete = (id: number) => {
+    setPersons(persons.filter((person) => person.id !== id));
   };
-
-  /**
-   * @function handleDelete
-   * @param {string} id
+    /**
+   * Function to set the currently selected person by ID
+   * @param {number} id - The ID of the person to select
    */
-  const handleDelete = (id: string) => {
-    setPersons(persons.filter(person => person.id !== id));
+  const handleEdit = (id: number) => {
+    const personToEdit = persons.find((person) => person.id === id) || null;
+    setSelectedPerson(personToEdit);
   };
-  /**
- * @function handleToggleActive
- * @param {string} id
- */
-const handleToggleActive = (id: string) => {
-  setPersons(persons.map(person => person.id === id ? { ...person, active: !person.active } : person));
-};
 
   return (
     <div>
-      <PersonForm formValues={formValues} handleInputChange={handleInputChange} handleSubmit={handleSubmit} />
-      <PersonTable persons={persons} handleDelete={handleDelete} handleToggleActive={handleToggleActive} />    </div>
+      <PersonForm
+        persons={persons}
+        setPersons={setPersons}
+        selectedPerson={selectedPerson}
+        setSelectedPerson={setSelectedPerson}
+      />
+      <PersonTable persons={persons} handleDelete={handleDelete} handleEdit={handleEdit} />
+    </div>
   );
-}
+};
 
 export default App;
